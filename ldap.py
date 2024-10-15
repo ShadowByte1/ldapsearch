@@ -48,6 +48,37 @@ def extract_domain_info(nmap_result):
     
     return domain, fqdn, os_info
 
+# Function to perform LDAP query and save results to queries.txt
+def ldap_query(ip, base_dn):
+    ldap_info_file = "queries.txt"
+    
+    # LDAP command to collect sAMAccountName information
+    ldap_command = f"ldapsearch -x -H ldap://{ip} -b '{base_dn}' '(objectclass=*)' sAMAccountName"
+    print(f"[*] Running LDAP Query: {ldap_command}")
+    
+    try:
+        # Run the LDAP command
+        result = subprocess.run(ldap_command, shell=True, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            # Write LDAP output to the queries.txt file
+            with open(ldap_info_file, "w") as file:
+                file.write(result.stdout)
+            print(f"[+] LDAP query completed. Results saved to {ldap_info_file}.")
+        else:
+            print(f"[-] LDAP query failed: {result.stderr}")
+    except Exception as e:
+        print(f"[-] Error running LDAP query: {e}")
+
+# Function to extract sAMAccountName from the queries.txt file
+def extract_samaccountname():
+    ldap_info_file = "queries.txt"
+    try:
+        print("[*] Extracting sAMAccountName from queries.txt...")
+        subprocess.run(f"cat {ldap_info_file} | grep sAMAccountName", shell=True)
+    except Exception as e:
+        print(f"[-] Error extracting sAMAccountName: {e}")
+
 # Main function
 def main():
     # Prompt the user for the target IP
@@ -60,14 +91,18 @@ def main():
         # Extract domain and FQDN from the Nmap scan result
         domain, fqdn, os_info = extract_domain_info(nmap_result)
         
-        # Further processing or use of domain, FQDN, and OS info...
-        # For example, running an LDAP search or other operations using the extracted information
+        # Format the domain as the base DN for LDAP queries
         if domain:
-            print(f"Using domain: {domain} for further operations.")
-        if fqdn:
-            print(f"Using FQDN: {fqdn} for further operations.")
-        if os_info:
-            print(f"Detected OS: {os_info}")
+            base_dn = f"DC={domain.replace('.', ',DC=')}"
+            print(f"[+] Using Base DN for LDAP queries: {base_dn}")
+            
+            # Run the LDAP query to collect sAMAccountName values
+            ldap_query(target_ip, base_dn)
+            
+            # Extract and display sAMAccountName from queries.txt
+            extract_samaccountname()
+        else:
+            print("[-] No domain information found. Cannot perform LDAP queries.")
     else:
         print("[-] Nmap scan did not return valid results.")
 
