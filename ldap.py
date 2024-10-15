@@ -56,7 +56,7 @@ def extract_domain_info(nmap_result):
 def ldap_query(ip, base_dn):
     ldap_info_file = "queries.txt"
     
-    # Correct LDAP command with double quotes
+    # Correct LDAP command with proper quotes and no extra commas
     ldap_command = f'ldapsearch -H "ldap://{ip}" -b "{base_dn}" "(objectclass=*)" -x sAMAccountName'
     print(f"{CYAN}[*] Running LDAP Query: {ldap_command}{RESET}")
     
