@@ -1,18 +1,24 @@
 import subprocess
 import re
 
+# ANSI escape codes for colors
+RESET = "\033[0m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+RED = "\033[91m"
+CYAN = "\033[96m"
+
 # Function to run an Nmap scan and extract domain information
 def run_nmap(ip):
-    # Run nmap with version detection (-sV) and OS detection (-A)
-    print(f"[*] Running Nmap scan on {ip} to detect services...")
+    print(f"{CYAN}[*] Running Nmap scan on {ip} to detect services...{RESET}")
     nmap_command = ["nmap", "-sV", "-A", "-T5", ip]
     result = subprocess.run(nmap_command, capture_output=True, text=True)
     
     if result.returncode == 0:
-        print(f"[+] Nmap scan completed successfully for {ip}")
+        print(f"{GREEN}[+] Nmap scan completed successfully for {ip}{RESET}")
         return result.stdout
     else:
-        print(f"[-] Nmap scan failed for {ip}. Error: {result.stderr}")
+        print(f"{RED}[-] Nmap scan failed for {ip}. Error: {result.stderr}{RESET}")
         return None
 
 # Function to extract domain, FQDN, and related information from Nmap results
@@ -21,30 +27,28 @@ def extract_domain_info(nmap_result):
     fqdn = None
     os_info = None
     
-    # Extract domain, FQDN, and OS info using regex patterns from Nmap output
-    print("[*] Extracting domain, FQDN, and OS information from Nmap scan results...")
+    print(f"{CYAN}[*] Extracting domain, FQDN, and OS information from Nmap scan results...{RESET}")
     for line in nmap_result.splitlines():
-        # Example patterns for extracting domain, FQDN, and OS
         domain_match = re.search(r'Domain:\s+([^\s]+)', line)
         fqdn_match = re.search(r'FQDN:\s+([^\s]+)', line)
         os_match = re.search(r'OS:\s+([^\s]+)', line)
         
         if domain_match:
             domain = domain_match.group(1)
-            print(f"[+] Domain found: {domain}")
+            print(f"{GREEN}[+] Domain found: {domain}{RESET}")
         if fqdn_match:
             fqdn = fqdn_match.group(1)
-            print(f"[+] FQDN found: {fqdn}")
+            print(f"{GREEN}[+] FQDN found: {fqdn}{RESET}")
         if os_match:
             os_info = os_match.group(1)
-            print(f"[+] OS found: {os_info}")
+            print(f"{GREEN}[+] OS found: {os_info}{RESET}")
     
     if not domain:
-        print("[-] Domain not found in Nmap results.")
+        print(f"{YELLOW}[-] Domain not found in Nmap results.{RESET}")
     if not fqdn:
-        print("[-] FQDN not found in Nmap results.")
+        print(f"{YELLOW}[-] FQDN not found in Nmap results.{RESET}")
     if not os_info:
-        print("[-] OS info not found in Nmap results.")
+        print(f"{YELLOW}[-] OS info not found in Nmap results.{RESET}")
     
     return domain, fqdn, os_info
 
@@ -53,36 +57,35 @@ def ldap_query(ip, base_dn):
     ldap_info_file = "queries.txt"
     
     # LDAP command to collect sAMAccountName information
-    ldap_command = f"ldapsearch -x -H ldap://{ip} -b '{base_dn}' '(objectclass=*)' sAMAccountName"
-    print(f"[*] Running LDAP Query: {ldap_command}")
+    ldap_command = ["ldapsearch", "-H", f"ldap://{ip}", "-b", base_dn, "(objectclass=*)", "-x", "sAMAccountName"]
+    print(f"{CYAN}[*] Running LDAP Query: {' '.join(ldap_command)}{RESET}")
     
     try:
-        # Run the LDAP command
-        result = subprocess.run(ldap_command, shell=True, capture_output=True, text=True)
+        result = subprocess.run(ldap_command, capture_output=True, text=True)
         
         if result.returncode == 0:
             # Write LDAP output to the queries.txt file
             with open(ldap_info_file, "w") as file:
                 file.write(result.stdout)
-            print(f"[+] LDAP query completed. Results saved to {ldap_info_file}.")
+            print(f"{GREEN}[+] LDAP query completed. Results saved to {ldap_info_file}.{RESET}")
         else:
-            print(f"[-] LDAP query failed: {result.stderr}")
+            print(f"{RED}[-] LDAP query failed with error: {result.stderr}{RESET}")
     except Exception as e:
-        print(f"[-] Error running LDAP query: {e}")
+        print(f"{RED}[-] Error running LDAP query: {e}{RESET}")
 
 # Function to extract sAMAccountName from the queries.txt file
 def extract_samaccountname():
     ldap_info_file = "queries.txt"
     try:
-        print("[*] Extracting sAMAccountName from queries.txt...")
+        print(f"{CYAN}[*] Extracting sAMAccountName from {ldap_info_file}...{RESET}")
         subprocess.run(f"cat {ldap_info_file} | grep sAMAccountName", shell=True)
     except Exception as e:
-        print(f"[-] Error extracting sAMAccountName: {e}")
+        print(f"{RED}[-] Error extracting sAMAccountName: {e}{RESET}")
 
 # Main function
 def main():
     # Prompt the user for the target IP
-    target_ip = input("Enter the target IP: ")
+    target_ip = input(f"{CYAN}Enter the target IP: {RESET}")
 
     # Run the Nmap scan to gather domain and FQDN information
     nmap_result = run_nmap(target_ip)
@@ -94,7 +97,7 @@ def main():
         # Format the domain as the base DN for LDAP queries
         if domain:
             base_dn = f"DC={domain.replace('.', ',DC=')}"
-            print(f"[+] Using Base DN for LDAP queries: {base_dn}")
+            print(f"{CYAN}[+] Using Base DN for LDAP queries: {base_dn}{RESET}")
             
             # Run the LDAP query to collect sAMAccountName values
             ldap_query(target_ip, base_dn)
@@ -102,9 +105,9 @@ def main():
             # Extract and display sAMAccountName from queries.txt
             extract_samaccountname()
         else:
-            print("[-] No domain information found. Cannot perform LDAP queries.")
+            print(f"{RED}[-] No domain information found. Cannot perform LDAP queries.{RESET}")
     else:
-        print("[-] Nmap scan did not return valid results.")
+        print(f"{RED}[-] Nmap scan did not return valid results.{RESET}")
 
 if __name__ == "__main__":
     main()
