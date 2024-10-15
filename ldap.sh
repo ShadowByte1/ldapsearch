@@ -24,16 +24,16 @@ fi
 # Use the extracted or manually provided Base DN and the target IP to perform the ldapsearch
 echo "Performing LDAP search using Base DN: $BASE_DN"
 
-# Perform ldapsearch to retrieve all objects using the objectClass=* filter and save to queries.txt
-ldapsearch -x -H "ldap://$TARGET_IP" -b "$BASE_DN" "(objectClass=*)" > queries.txt
+# Perform ldapsearch with recursive search (subtree scope) and save to queries.txt
+ldapsearch -x -H "ldap://$TARGET_IP" -b "$BASE_DN" -s sub "(objectClass=*)" > queries.txt
 
 # Check if the ldapsearch query was successful
 if [ $? -eq 0 ]; then
   echo "LDAP search completed. Results saved in queries.txt"
   
-  # Extract sAMAccountName from the output file and display to the terminal
-  echo "Extracting sAMAccountName..."
-  grep "sAMAccountName" queries.txt | awk '{print $2}'
+  # Extract and format all instances of sAMAccountName from the output file and display to the terminal
+  echo "Extracting all instances of sAMAccountName recursively..."
+  grep "sAMAccountName" queries.txt | awk '{print $2}' | sort -u
 else
   echo "LDAP search failed."
 fi
