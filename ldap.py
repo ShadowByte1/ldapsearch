@@ -56,11 +56,12 @@ def extract_domain_info(nmap_result):
 def ldap_query(ip, base_dn):
     ldap_info_file = "queries.txt"
     
-    # Construct LDAP command correctly as per your manual test
-    ldap_command = f"ldapsearch -H ldap://{ip} -b '{base_dn}' '(objectclass=*)' -x sAMAccountName"
+    # Correct LDAP command with double quotes
+    ldap_command = f'ldapsearch -H "ldap://{ip}" -b "{base_dn}" "(objectclass=*)" -x sAMAccountName'
     print(f"{CYAN}[*] Running LDAP Query: {ldap_command}{RESET}")
     
     try:
+        # Run the LDAP command
         result = subprocess.run(ldap_command, shell=True, capture_output=True, text=True)
         
         if result.returncode == 0:
