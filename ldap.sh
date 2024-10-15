@@ -10,9 +10,9 @@ NMAP_OUTPUT=$(nmap -sV "$TARGET_IP")
 # Display nmap output
 echo "$NMAP_OUTPUT"
 
-# Attempt to extract the base DN from the nmap output (customize this based on expected format)
-# Here we assume nmap output contains relevant LDAP information, adjust the grep accordingly
-BASE_DN=$(echo "$NMAP_OUTPUT" | grep -i "Domain:" | awk '{print $2}')
+# Attempt to extract the base DN manually from the nmap output (customize this based on expected format)
+# As nmap does not provide the Base DN directly, prompt the user to enter it manually if it's not detected.
+BASE_DN=$(echo "$NMAP_OUTPUT" | grep -oP '(?<=Domain: )[^,]+' | head -1)
 
 # If we couldn't extract the base DN, prompt the user for it
 if [ -z "$BASE_DN" ]; then
